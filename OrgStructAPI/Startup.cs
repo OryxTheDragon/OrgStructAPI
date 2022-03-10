@@ -26,16 +26,7 @@ namespace OrgStructAPI
                 connection.Open();
                 Console.WriteLine("State: {0}", connection.State);
                 Console.WriteLine("ConnectionString: {0}",
-                    connection.ConnectionString);
-                var command = new SqlCommand("SELECT * FROM FIRMY", connection);
-                /*
-                var reader = command.ExecuteReader();
-                
-                while (reader.Read())
-                {
-                    Console.WriteLine("Firma : " + reader[1] + " " + reader[0] +" " + reader[2]);
-                }
-                */
+                connection.ConnectionString);
             }
 
         }

@@ -93,8 +93,8 @@ namespace OrgStructAPI.Controllers
 
         // GET api/<ZamestnanciController>/5
         [HttpGet("{id}")]
-        public object? Get(int id) //Vrati bud zamestnanca, alebo BadResponseResult ako potomok ObjectResult.
-        {
+        public object? Get(int id) 
+        {//Vrati bud zamestnanca, alebo BadResponseResult ako potomok ObjectResult.
             if (IDs.Contains(id))
             {
 
@@ -163,28 +163,51 @@ namespace OrgStructAPI.Controllers
 
         // POST api/<ZamestnanciController>
         [HttpPost]
-        public void Post([FromHeader] string meno, [FromHeader] string priezvisko)
-        {
+        public ObjectResult Post([FromHeader] string meno, [FromHeader] string priezvisko, [FromHeader] int id_oddelenia)
+        {//navrati BadResult alebo OKResult
+            List<int> list = new();
+            SqlConnection _connection = new SqlConnection();
+            string _connectionString = Startup.GetConnectionString();
             _connection.ConnectionString = _connectionString;
             _connection.Open();
-            var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_oddelenia,phone_num,title) VALUES(" +
-                "@meno," +
-                "@priezvisko," +
-                "null," +
-                "null," +
-                "null" +
-                ")", _connection);
-            command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-            command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-            command.CommandType = CommandType.Text;
-            command.ExecuteNonQuery();
+            var command = new SqlCommand("SELECT id_oddelenia FROM Oddelenia", _connection);
+            SqlDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add((int)reader[0]);
+            }
             _connection.Close();
+
+            if (list.Contains(id_oddelenia))
+            {
+                _connection.ConnectionString = _connectionString;
+                _connection.Open();
+                command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_oddelenia,phone_num,title) VALUES(" +
+                    "@meno," +
+                    "@priezvisko," +
+                    "@id_oddelenia," +
+                    "null," +
+                    "null" +
+                    ")", _connection);
+                command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
+                command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
+                command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id_oddelenia;
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                _connection.Close();
+                return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
+            }
+            else
+            {
+                return BadRequest("Zakaznik musi byt priradeny do oddelenia. V databaze neexistuje oddelenie so sadanym ID.");
+            }
         }
 
         // PUT api/<ZamestnanciController>/5
         [HttpPut("{id}")]
         public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] int? id_oddelenia, [FromHeader] string? phone_num, [FromHeader] int? title)
         {//navrati BadResult alebo OKResult
+            
             if (IDs.Contains(id))
             {
                 if (meno != null)

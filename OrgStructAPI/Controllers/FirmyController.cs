@@ -129,7 +129,7 @@ namespace OrgStructAPI.Controllers
                 _connection.ConnectionString = _connectionString;
                 _connection.Open();
                 var command = new SqlCommand("DELETE FROM Firmy WHERE id_firmy = @id_firmy", _connection);
-                command.Parameters.AddWithValue("@id_firmy", SqlDbType.VarChar).Value = id;
+                command.Parameters.AddWithValue("@id_firmy", SqlDbType.Int).Value = id;
                 command.ExecuteNonQuery();
                 _connection.Close();
                 return Ok("Firma s danym ID bola zmazana.");
@@ -148,7 +148,7 @@ namespace OrgStructAPI.Controllers
             _connection.Open();
             var command = new SqlCommand("SELECT id_firmy FROM Firmy", _connection);
             SqlDataReader reader = command.ExecuteReader();
-            if (reader.Read())
+            while (reader.Read())
             {
                 list.Add(reader.GetInt32(0));
             }
