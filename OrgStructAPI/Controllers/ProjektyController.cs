@@ -247,6 +247,10 @@ namespace OrgStructAPI.Controllers
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
+                if (nazov_projektu == null && popis_projektu == null && id_veduci_projektu == null && nazov_projektu == null )
+                {
+                    return BadRequest("Neprisli ziadne zadane hodnoty na upravu. Zaslite hodnoty ktore chcete upravit cez header.");
+                }
                 return Ok("Projekt s danym ID bol upraveny.");
             }
             else { 

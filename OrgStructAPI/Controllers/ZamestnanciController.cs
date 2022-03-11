@@ -40,7 +40,7 @@ namespace OrgStructAPI.Controllers
                         }
                         else
                         {
-                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, null, (int)reader[5]);
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, null, (string)reader[5]);
                             _zamestnanci.Add(item);
 
                         }
@@ -55,7 +55,7 @@ namespace OrgStructAPI.Controllers
                         }
                         else
                         {
-                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], (int)reader[5]);
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], (string)reader[5]);
                             _zamestnanci.Add(item);
                         }
                     }
@@ -70,7 +70,7 @@ namespace OrgStructAPI.Controllers
                     }
                     else
                     {
-                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], null, (int)reader[5]);
+                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], null, (string)reader[5]);
                         _zamestnanci.Add(item);
                     }
                 }
@@ -82,7 +82,7 @@ namespace OrgStructAPI.Controllers
                 }
                 else
                 {
-                    Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], (string)reader[4], (int)reader[5]);
+                    Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], (string)reader[4], (string)reader[5]);
                     _zamestnanci.Add(item);
                 }
 
@@ -97,7 +97,6 @@ namespace OrgStructAPI.Controllers
         {//Vrati bud zamestnanca, alebo BadResponseResult ako potomok ObjectResult.
             if (IDs.Contains(id))
             {
-
                 Zamestnanec? item = null;
                 _connection.ConnectionString = _connectionString;
                 _connection.Open();
@@ -119,17 +118,21 @@ namespace OrgStructAPI.Controllers
                             }
                             else
                             {
-                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, null, (int)reader[5]);
-                            }
-                        }
-                        if (reader[5] is DBNull)
-                        {
-                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], null);
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, null, (string)reader[5]);
 
+                            }
                         }
                         else
                         {
-                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], (int)reader[5]);
+                            if (reader[5] is DBNull)
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], null);
+
+                            }
+                            else
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], null, (string)reader[4], (string)reader[5]);
+                            }
                         }
                     }
                     //Sekcia 4
@@ -141,7 +144,7 @@ namespace OrgStructAPI.Controllers
                         }
                         else
                         {
-                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], null, (int)reader[5]);
+                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], null, (string)reader[5]);
                         }
                     }
                     //Sekcia5
@@ -151,8 +154,12 @@ namespace OrgStructAPI.Controllers
                     }
                     else
                     {
-                        item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], (string)reader[4], (int)reader[5]);
+                        item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[3], (string)reader[4], (string)reader[5]);
                     }
+                }
+                if (item == null)
+                {
+                    return BadRequest("Doslo k chybe, zamestnanec s danym ID sa nasiel, ale data sa neprecitali. Pravdepodobne bude chyba v SQL query.");
 
                 }
                 _connection.Close();
@@ -177,7 +184,14 @@ namespace OrgStructAPI.Controllers
                 list.Add((int)reader[0]);
             }
             _connection.Close();
-
+            if (meno == null)
+            {
+                return BadRequest("Novy zakaznik musi mat meno. Poslite nazov zakaznika v headeri.");
+            }
+            if (priezvisko == null)
+            {
+                return BadRequest("Novy zakaznik musi mat priezvisko. Poslite priezvisko zakaznika v headeri.");
+            }
             if (list.Contains(id_oddelenia))
             {
                 _connection.ConnectionString = _connectionString;
@@ -192,20 +206,19 @@ namespace OrgStructAPI.Controllers
                 command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
                 command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
                 command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id_oddelenia;
-                command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
                 _connection.Close();
                 return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
             }
             else
             {
-                return BadRequest("Zakaznik musi byt priradeny do oddelenia. V databaze neexistuje oddelenie so sadanym ID.");
+                return BadRequest("Novy zakaznik musi byt priradeny do oddelenia. V databaze neexistuje oddelenie so sadanym ID.");
             }
         }
 
         // PUT api/<ZamestnanciController>/5
         [HttpPut("{id}")]
-        public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] int? id_oddelenia, [FromHeader] string? phone_num, [FromHeader] int? title)
+        public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] int? id_oddelenia, [FromHeader] string? phone_num, [FromHeader] string? title)
         {//navrati BadResult alebo OKResult
             
             if (IDs.Contains(id))
@@ -216,7 +229,7 @@ namespace OrgStructAPI.Controllers
                     _connection.Open();
                     var command = new SqlCommand("UPDATE Zamestnanci SET meno = @meno WHERE id_zamestnanca = @id_zamestnanca", _connection);
                     command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.VarChar).Value = id;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
@@ -226,7 +239,7 @@ namespace OrgStructAPI.Controllers
                     _connection.Open();
                     var command = new SqlCommand("UPDATE Zamestnanci SET priezvisko = @priezvisko WHERE id_zamestnanca = @id_zamestnanca", _connection);
                     command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.VarChar).Value = id;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
@@ -236,7 +249,7 @@ namespace OrgStructAPI.Controllers
                     _connection.Open();
                     var command = new SqlCommand("UPDATE Zamestnanci SET id_oddelenia = @id_oddelenia WHERE id_zamestnanca = @id_zamestnanca", _connection);
                     command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.VarChar).Value = id_oddelenia;
-                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.VarChar).Value = id;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
@@ -246,7 +259,7 @@ namespace OrgStructAPI.Controllers
                     _connection.Open();
                     var command = new SqlCommand("UPDATE Zamestnanci SET phone_num = @phone_num WHERE id_zamestnanca = @id_zamestnanca", _connection);
                     command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.VarChar).Value = id;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
@@ -256,9 +269,13 @@ namespace OrgStructAPI.Controllers
                     _connection.Open();
                     var command = new SqlCommand("UPDATE Zamestnanci SET title = @title WHERE id_zamestnanca = @id_zamestnanca", _connection);
                     command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.VarChar).Value = id;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
+                }
+                if (meno == null && priezvisko == null && id_oddelenia == null && phone_num == null && title == null)
+                {
+                    return BadRequest("Neboli zaslane ziadne udaje na upravu. Poslite udaje na zmenu ce header.");
                 }
                 return Ok("Zamestnanec bol uspesne upraveny.");
             }

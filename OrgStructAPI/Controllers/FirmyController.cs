@@ -76,15 +76,24 @@ namespace OrgStructAPI.Controllers
 
         // POST api/<FirmyController>
         [HttpPost]
-        public void Post([FromHeader] string nazov_firmy)
+        public ObjectResult Post([FromHeader] string? nazov_firmy)
         {
-            _connection.ConnectionString = _connectionString;
-            _connection.Open();
-            var command = new SqlCommand("INSERT INTO Firmy (nazov_firmy,id_riaditel_firmy) VALUES(@nazov_firmy,null)", _connection);
-            command.Parameters.AddWithValue("@nazov_firmy", SqlDbType.VarChar).Value = nazov_firmy;
-            command.CommandType = CommandType.Text;
-            command.ExecuteNonQuery();
-            _connection.Close();
+            if (nazov_firmy != null)
+            {
+                _connection.ConnectionString = _connectionString;
+                _connection.Open();
+                var command = new SqlCommand("INSERT INTO Firmy (nazov_firmy,id_riaditel_firmy) VALUES(@nazov_firmy,null)", _connection);
+                command.Parameters.AddWithValue("@nazov_firmy", SqlDbType.VarChar).Value = nazov_firmy;
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                _connection.Close();
+                return Ok("Registracia firmy prebehla uspesne.");
+
+            }
+            else {
+                return BadRequest("Firma nema nazov. Na registraciu firmy potrebujete nazov firmy. Poslite nazov v headeri.");
+            }
+            
         }
 
         // PUT api/<FirmyController>/5
@@ -113,6 +122,10 @@ namespace OrgStructAPI.Controllers
                     command.Parameters.AddWithValue("@id_firmy", SqlDbType.VarChar).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
+                }
+                if (id_riaditel_firmy == null && nazov_firmy == null)
+                {
+                    return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
                 }
                 return Ok("Firma s danym ID bola upravena.");
             }

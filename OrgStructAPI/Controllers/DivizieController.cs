@@ -83,9 +83,17 @@ namespace OrgStructAPI.Controllers
 
         // POST api/<DivizieController>
         [HttpPost]
-        public void Post([FromHeader] string nazov_divizie, [FromHeader] int? id_veduceho_divizie, [FromHeader] int id_firmy_divizie)
+        public ObjectResult Post([FromHeader] string? nazov_divizie, [FromHeader] int? id_veduceho_divizie, [FromHeader] int? id_firmy_divizie)
         {
-            
+
+            if (nazov_divizie == null)
+            {
+                return BadRequest("Neprisiel nazov divizie. Na vytvorenie novej divizie potrebujete zadat nazov divizie v headeri.");
+            }
+            if (id_firmy_divizie == null)
+            {
+                return BadRequest("Neprisielo id firmy do ktorej bude patrit nova divizia. Na vytvorenie novej divizie potrebujete zadat akej firme patri. Poslite id v headeri.");
+            }
             if (id_veduceho_divizie != null)
             {
                 _connection.ConnectionString = _connectionString;
@@ -100,6 +108,7 @@ namespace OrgStructAPI.Controllers
                 command.Parameters.AddWithValue("@id_firmy_divizie", SqlDbType.Int).Value = id_firmy_divizie;
                 command.ExecuteNonQuery();
                 _connection.Close();
+                return Ok("Nova divizia uspesne registrovana.");
             }
             else {
                 _connection.ConnectionString = _connectionString;
@@ -113,6 +122,7 @@ namespace OrgStructAPI.Controllers
                 command.Parameters.AddWithValue("@id_firmy_divizie", SqlDbType.Int).Value = id_firmy_divizie;
                 command.ExecuteNonQuery();
                 _connection.Close();
+                return Ok("Nova divizia uspesne registrovana bez vedenia.");
             }
         }
 
@@ -151,6 +161,10 @@ namespace OrgStructAPI.Controllers
                     command.Parameters.AddWithValue("@id_divizie", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
+                }
+                if (nazov_divizie == null && id_veduceho_divizie == null && id_firmy_divizie == null)
+                {
+                    return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
                 }
                 return Ok("Uprava prebehla uspesne.");
             }

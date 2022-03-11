@@ -81,8 +81,16 @@ namespace OrgStructAPI.Controllers
 
         // POST api/<OddeleniaControllers>
         [HttpPost]
-        public void Post([FromHeader] string nazov_oddelenia, [FromHeader] int id_projektu_oddelenia)
+        public ObjectResult Post([FromHeader] string? nazov_oddelenia, [FromHeader] int? id_projektu_oddelenia)
         {
+            if (nazov_oddelenia == null)
+            {
+                return BadRequest("Na zaregistrovanie noveho oddelenia je potreba uviest nazov. Poslite nazov v headeri.");
+            }
+            if (id_projektu_oddelenia == null)
+            {
+                return BadRequest("Na zaregistrovanie noveho oddelenia je potreba uviest id projektu daneho oddelenia. Poslite nazov v headeri.");
+            }
             _connection.ConnectionString = _connectionString;
             _connection.Open();
             var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,null,@id_projektu_oddelenia)", _connection);
@@ -90,6 +98,7 @@ namespace OrgStructAPI.Controllers
             command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
             command.ExecuteNonQuery();
             _connection.Close();
+            return Ok("Nove oddelenie uspesne zaregistrovane.");
         }
 
         // PUT api/<OddeleniaControllers>/5
@@ -129,6 +138,10 @@ namespace OrgStructAPI.Controllers
                     command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
                     command.ExecuteNonQuery();
                     _connection.Close();
+                }
+                if (id_projektu_oddelenia == null && id_veduceho_oddelenia == null && nazov_oddelenia == null)
+                {
+                    return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
                 }
                 return Ok("Oddelenie s danym ID bolo upravene.");
             }
