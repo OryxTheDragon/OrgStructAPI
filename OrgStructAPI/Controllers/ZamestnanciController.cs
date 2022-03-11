@@ -32,27 +32,60 @@ namespace OrgStructAPI.Controllers
                 {
                     if (reader[4] is DBNull)
                     {
+                        if (reader[6] is DBNull)
+                        {
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null, null);
+                            _zamestnanci.Add(item);
 
-                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null);
-                        _zamestnanci.Add(item);
+                        }
+                        else {
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null, (int)reader[6]);
+                            _zamestnanci.Add(item);
+                        }
                     }
                     else
                     {
+                        if (reader[6] is DBNull)
+                        {
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4], null);
+                            _zamestnanci.Add(item);
 
-                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4]);
-                        _zamestnanci.Add(item);
+                        }
+                        else
+                        {
+                            Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4], (int)reader[6]);
+                            _zamestnanci.Add(item);
+                        }
                     }
                 }
                 //Sekcia 4
                 else if (reader[4] is DBNull)
                 {
-                    Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null);
-                    _zamestnanci.Add(item);
+                    if (reader[6] is DBNull)
+                    {
+                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null, null);
+                        _zamestnanci.Add(item);
+
+                    }
+                    else
+                    {
+                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null, (int)reader[6]);
+                        _zamestnanci.Add(item);
+                    }
                 }
                 else
                 {
-                    Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4]);
-                    _zamestnanci.Add(item);
+                    if (reader[6] is DBNull)
+                    {
+                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4], null);
+                        _zamestnanci.Add(item);
+
+                    }
+                    else
+                    {
+                        Zamestnanec item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4], (int)reader[6]);
+                        _zamestnanci.Add(item);
+                    }
                 }
 
             }
@@ -80,22 +113,55 @@ namespace OrgStructAPI.Controllers
                     {
                         if (reader[4] is DBNull)
                         {
-                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null);
+                            if (reader[6] is DBNull)
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null, null);
+
+                            }
+                            else
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, null, (int)reader[6]);
+                            }
                         }
                         else
                         {
-                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4]);
+                            if (reader[6] is DBNull)
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4], null);
+
+                            }
+                            else
+                            {
+                                item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], null, (string)reader[4], (int)reader[6]);
+                            }
                         }
                     }
                     //Sekcia 4
                     else if (reader[4] is DBNull)
                     {
-                        item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null);
+                        if (reader[6] is DBNull)
+                        {
+                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null, null);
+
+                        }
+                        else
+                        {
+                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], null, (int)reader[6]);
+                        }
                     }
                     else
                     {
-                        item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4]);
+                        if (reader[6] is DBNull)
+                        {
+                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4], null);
+
+                        }
+                        else
+                        {
+                            item = new Zamestnanec((int)reader[0], (string)reader[1], (string)reader[2], (int)reader[5], (string)reader[3], (string)reader[4], (int)reader[6]);
+                        }
                     }
+
                 }
                 if (item == null)
                 {
@@ -142,6 +208,7 @@ namespace OrgStructAPI.Controllers
                         "@priezvisko," +
                         "@id_firmy_zamestnanca," +
                         "null," +
+                        "null," +
                         "null" +
                         ")", _connection);
                     command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
@@ -161,7 +228,7 @@ namespace OrgStructAPI.Controllers
 
         // PUT api/<ZamestnanciController>/5
         [HttpPut("{id}")]
-        public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] string? phone_num, [FromHeader] string? title, [FromHeader] int? id_firmy_zamestnanca)
+        public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] string? phone_num, [FromHeader] string? title, [FromHeader] int? id_firmy_zamestnanca, [FromHeader] int? id_oddelenia_zamestnanca)
         {//navrati BadResult alebo OKResult
 
             if (IDs.Contains(id))
@@ -216,7 +283,17 @@ namespace OrgStructAPI.Controllers
                     command.ExecuteNonQuery();
                     _connection.Close();
                 }
-                if (meno == null && priezvisko == null && id_firmy_zamestnanca == null && phone_num == null && title == null)
+                if (id_oddelenia_zamestnanca != null)
+                {
+                    _connection.ConnectionString = _connectionString;
+                    _connection.Open();
+                    var command = new SqlCommand("UPDATE Zamestnanci SET id_oddelenia_zamestnanca = @id_oddelenia_zamestnanca WHERE id_zamestnanca = @id_zamestnanca", _connection);
+                    command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
+                    command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
+                    command.ExecuteNonQuery();
+                    _connection.Close();
+                }
+                if (meno == null && priezvisko == null && id_firmy_zamestnanca == null && phone_num == null && title == null && id_oddelenia_zamestnanca == null)
                 {
                     return BadRequest("Neboli zaslane ziadne udaje na upravu. Poslite udaje na zmenu cez header.");
                 }
@@ -240,7 +317,6 @@ namespace OrgStructAPI.Controllers
                 command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
                 command.ExecuteNonQuery();
                 _connection.Close();
-
                 return Ok("Zamestnanec uspesne zmazany.");
             }
             else

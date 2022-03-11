@@ -3,7 +3,7 @@
     public class Zamestnanec
     {
 
-        public Zamestnanec(int id_zamestnanca, string meno, string priezvisko, int id_firmy_zamestnanca, string? phone_num, string? titul)
+        public Zamestnanec(int id_zamestnanca, string meno, string priezvisko, int id_firmy_zamestnanca, string? phone_num, string? titul, int? id_oddelenia_zamestnanca)
         {
             this.id_zamestnanca = id_zamestnanca;
             this.meno = meno;
@@ -11,6 +11,7 @@
             this.phone_num = phone_num;
             this.titul = titul;
             this.id_firmy_zamestnanca = id_firmy_zamestnanca;
+            this.id_oddelenia_zamestnanca = id_oddelenia_zamestnanca;
         }
 
         public int id_zamestnanca { get; set; }
@@ -19,5 +20,6 @@
         public int id_firmy_zamestnanca { get; set; }
         public string? phone_num { get; set; }
         public string? titul { get; set; }
+        public int? id_oddelenia_zamestnanca { get; set; }
     }
 }
