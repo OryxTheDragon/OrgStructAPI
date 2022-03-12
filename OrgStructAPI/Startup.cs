@@ -37,7 +37,7 @@ namespace OrgStructAPI
             var config = new HttpConfiguration();
 
             config.Routes.MapHttpRoute(
-                name: "DefaultApi",
+                name: "OrgStructAPI",
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );

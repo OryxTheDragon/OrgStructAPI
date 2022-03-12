@@ -4,16 +4,16 @@ namespace OrgStructAPI
 {
     public static class ControlaExisten
     {
-        /* 
-         * TableId:
-         * Firmy        - 1
-         * Zamestnanci  - 2
-         * Divizie      - 3
-         * Projekty     - 4
-         * Oddelenia    - 5
-         * id: Id objektu ktory hladame.
-         */
-        public static bool ExistujePodlaID(int? tableId, int id)
+        public enum TableID
+        {
+            Firmy,
+            Zamestnanci,
+            Divizie,
+            Projekty,
+            Oddelenia
+        }
+
+        public static bool ExistujePodlaID(TableID? tableId, int id)
         {
             SqlConnection _connection = new SqlConnection();
             string _connectionString = Startup.GetConnectionString();
@@ -23,19 +23,19 @@ namespace OrgStructAPI
             Console.WriteLine("Pred switchom.");
             switch (tableId)
             {
-                case 1:
+                case TableID.Firmy:
                     command = new SqlCommand("SELECT id_firmy FROM Firmy", _connection);
                     break;
-                case 2:
+                case TableID.Zamestnanci:
                     command = new SqlCommand("SELECT id_zamestnanca FROM Zamestnanci", _connection);
                     break;
-                case 3:
+                case TableID.Divizie:
                     command = new SqlCommand("SELECT id_divizie FROM Divizie", _connection);
                     break;
-                case 4:
+                case TableID.Projekty:
                     command = new SqlCommand("SELECT id_projektu FROM Projekty", _connection);
                     break;
-                case 5:
+                case TableID.Oddelenia:
                     command = new SqlCommand("SELECT id_oddelenia FROM Oddelenia", _connection);
                     break;
                 default:
@@ -50,6 +50,26 @@ namespace OrgStructAPI
                 }
             }
             return false;
+        }
+
+        public static List<Object?> replaceDBNullsInReaderRow(SqlDataReader reader) {
+            List<Object?> list = new List<Object?>();
+            if (reader.HasRows == false)
+            {
+                Console.WriteLine("Reader has no rows.");
+                return list;
+            }
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                if (reader.IsDBNull(i))
+                {
+                    list.Add(null);
+                }
+                else {
+                    list.Add(reader[i]);
+                }
+            }
+            return list;
         }
     }
 }
