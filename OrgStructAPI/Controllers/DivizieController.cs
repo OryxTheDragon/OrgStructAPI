@@ -88,14 +88,23 @@ namespace OrgStructAPI.Controllers
 
             if (nazov_divizie == null)
             {
-                return BadRequest("Neprisiel nazov divizie. Na vytvorenie novej divizie potrebujete zadat nazov divizie v headeri.");
+                    return BadRequest("Neprisiel nazov divizie. Na vytvorenie novej divizie potrebujete zadat nazov divizie v headeri.");
             }
             if (id_firmy_divizie == null)
             {
-                return BadRequest("Neprisielo id firmy do ktorej bude patrit nova divizia. Na vytvorenie novej divizie potrebujete zadat akej firme patri. Poslite id v headeri.");
+                    return BadRequest("Neprisielo id firmy do ktorej bude patrit nova divizia. Na vytvorenie novej divizie potrebujete zadat akej firme patri. Poslite id v headeri.");
+            }
+            if (!ControlaExisten.ExistujePodlaID(1, (int)id_firmy_divizie))
+            {
+                    return BadRequest("Neexistuje firma so zadanym ID. Musite poslat id existujucej firmy ktorej patri divizia.");
             }
             if (id_veduceho_divizie != null)
             {
+                if (!ControlaExisten.ExistujePodlaID(2, (int)id_veduceho_divizie))
+                {
+                    return BadRequest("Neexistuje zamestnanec zaslany ako novy veduci divizie.");
+
+                }
                 _connection.ConnectionString = _connectionString;
                 _connection.Open();
                 var command = new SqlCommand("INSERT INTO Divizie (nazov_divizie,id_veduceho_divizie,id_firmy_divizie) VALUES(" +
@@ -110,7 +119,8 @@ namespace OrgStructAPI.Controllers
                 _connection.Close();
                 return Ok("Nova divizia uspesne registrovana.");
             }
-            else {
+            else
+            {
                 _connection.ConnectionString = _connectionString;
                 _connection.Open();
                 var command = new SqlCommand("INSERT INTO Divizie (nazov_divizie,id_veduceho_divizie,id_firmy_divizie) VALUES(" +
@@ -144,23 +154,36 @@ namespace OrgStructAPI.Controllers
                 }
                 if (id_veduceho_divizie != null)
                 {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    var command = new SqlCommand("UPDATE Divizie SET id_veduceho_divizie = @id_veduceho_divizie WHERE id_divizie = @id_divizie", _connection);
-                    command.Parameters.AddWithValue("@id_veduceho_divizie", SqlDbType.Int).Value = id_veduceho_divizie;
-                    command.Parameters.AddWithValue("@id_divizie", SqlDbType.Int).Value = id;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
+                    if (ControlaExisten.ExistujePodlaID(2, (int)id_veduceho_divizie))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("UPDATE Divizie SET id_veduceho_divizie = @id_veduceho_divizie WHERE id_divizie = @id_divizie", _connection);
+                        command.Parameters.AddWithValue("@id_veduceho_divizie", SqlDbType.Int).Value = id_veduceho_divizie;
+                        command.Parameters.AddWithValue("@id_divizie", SqlDbType.Int).Value = id;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+                    }
+                    else { 
+                        return BadRequest("Neexistuje zamestnanec ktory ma byt priradeny ako veduci divizie.");
+                    }
                 }
                 if (id_firmy_divizie != null)
                 {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    var command = new SqlCommand("UPDATE Divizie SET id_firmy_divizie = @id_firmy_divizie WHERE id_divizie = @id_divizie", _connection);
-                    command.Parameters.AddWithValue("@id_firmy_divizie", SqlDbType.Int).Value = id_firmy_divizie;
-                    command.Parameters.AddWithValue("@id_divizie", SqlDbType.Int).Value = id;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
+                    if (ControlaExisten.ExistujePodlaID(1, (int)id_firmy_divizie))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("UPDATE Divizie SET id_firmy_divizie = @id_firmy_divizie WHERE id_divizie = @id_divizie", _connection);
+                        command.Parameters.AddWithValue("@id_firmy_divizie", SqlDbType.Int).Value = id_firmy_divizie;
+                        command.Parameters.AddWithValue("@id_divizie", SqlDbType.Int).Value = id;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+                    }
+                    else
+                    {
+                        return BadRequest("Neexistuje firma ktory ktora ma byt priradena ako firma divizie.");
+                    }
                 }
                 if (nazov_divizie == null && id_veduceho_divizie == null && id_firmy_divizie == null)
                 {
@@ -174,7 +197,7 @@ namespace OrgStructAPI.Controllers
         // DELETE api/<DivizieController>/5
         [HttpDelete("{id}")]
         public ObjectResult Delete(int id)
-        {
+        { 
             if (IDs.Contains(id))
             {
                 _connection.ConnectionString = _connectionString;
@@ -206,5 +229,7 @@ namespace OrgStructAPI.Controllers
             }
             return list;
         }
+
+
     }
 }

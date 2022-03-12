@@ -81,7 +81,7 @@ namespace OrgStructAPI.Controllers
 
         // POST api/<OddeleniaControllers>
         [HttpPost]
-        public ObjectResult Post([FromHeader] string? nazov_oddelenia, [FromHeader] int? id_projektu_oddelenia)
+        public ObjectResult Post([FromHeader] string? nazov_oddelenia, [FromHeader] int? id_veduceho_oddelenia, [FromHeader] int? id_projektu_oddelenia)
         {
             if (nazov_oddelenia == null)
             {
@@ -91,14 +91,49 @@ namespace OrgStructAPI.Controllers
             {
                 return BadRequest("Na zaregistrovanie noveho oddelenia je potreba uviest id projektu daneho oddelenia. Poslite nazov v headeri.");
             }
-            _connection.ConnectionString = _connectionString;
-            _connection.Open();
-            var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,null,@id_projektu_oddelenia)", _connection);
-            command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
-            command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
-            command.ExecuteNonQuery();
-            _connection.Close();
-            return Ok("Nove oddelenie uspesne zaregistrovane.");
+
+            if (ControlaExisten.ExistujePodlaID(4, (int)id_projektu_oddelenia))
+            {
+                if (id_veduceho_oddelenia != null)
+                {
+                    if (ControlaExisten.ExistujePodlaID(2, (int)id_veduceho_oddelenia))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,@id_veduceho_oddelenia,@id_projektu_oddelenia)", _connection);
+                        command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
+                        command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.Int).Value = id_veduceho_oddelenia;
+                        command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+                        return Ok("Nove oddelenie uspesne zaregistrovane.");
+
+                    }
+                    else
+                    {
+                        return BadRequest("Zamestnanec zaslany s id ako veduci oddelenia neexistuje.");
+                    }
+
+
+                }
+                else
+                {
+                    _connection.ConnectionString = _connectionString;
+                    _connection.Open();
+                    var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,null,@id_projektu_oddelenia)", _connection);
+                    command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
+                    command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
+                    command.ExecuteNonQuery();
+                    _connection.Close();
+                    return Ok("Nove oddelenie uspesne zaregistrovane.");
+
+                }
+            }
+            else
+            {
+                return BadRequest("Projekt zaslany cez id ako projekt oddelenia neexistuje.");
+
+            }
         }
 
         // PUT api/<OddeleniaControllers>/5
@@ -120,24 +155,38 @@ namespace OrgStructAPI.Controllers
 
                 if (id_veduceho_oddelenia != null)
                 {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    var command = new SqlCommand("UPDATE Oddelenia SET id_veduceho_oddelenia = @id_veduceho_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
-                    command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.VarChar).Value = id_veduceho_oddelenia;
-                    command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
+                    if (ControlaExisten.ExistujePodlaID(2, (int)id_veduceho_oddelenia))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("UPDATE Oddelenia SET id_veduceho_oddelenia = @id_veduceho_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
+                        command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.VarChar).Value = id_veduceho_oddelenia;
+                        command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+                    }
+                    else
+                    {
+                        return BadRequest("Neexistuje zamestnanec ktory ma byt priradeny ako veduci oddelenia.");
+                    }
                 }
 
                 if (id_projektu_oddelenia != null)
                 {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    var command = new SqlCommand("UPDATE Oddelenia SET id_projektu_oddelenia = @id_projektu_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
-                    command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.VarChar).Value = id_projektu_oddelenia;
-                    command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
+                    if (ControlaExisten.ExistujePodlaID(4, (int)id_projektu_oddelenia))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("UPDATE Oddelenia SET id_projektu_oddelenia = @id_projektu_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
+                        command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.VarChar).Value = id_projektu_oddelenia;
+                        command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+                    }
+                    else
+                    {
+                        return BadRequest("Projekt zaslany cez id ako projekt oddelenia neexistuje.");
+                    }
                 }
                 if (id_projektu_oddelenia == null && id_veduceho_oddelenia == null && nazov_oddelenia == null)
                 {

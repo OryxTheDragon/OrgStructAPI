@@ -104,13 +104,21 @@ namespace OrgStructAPI.Controllers
             {
                 if (id_riaditel_firmy != null)
                 {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    var command = new SqlCommand("UPDATE Firmy SET id_riaditel_firmy = @id_riaditel_firmy WHERE id_firmy = @id_firmy", _connection);
-                    command.Parameters.AddWithValue("@id_riaditel_firmy", SqlDbType.VarChar).Value = id_riaditel_firmy;
-                    command.Parameters.AddWithValue("@id_firmy", SqlDbType.VarChar).Value = id;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
+                    if (ControlaExisten.ExistujePodlaID(2, (int)id_riaditel_firmy))
+                    {
+                        _connection.ConnectionString = _connectionString;
+                        _connection.Open();
+                        var command = new SqlCommand("UPDATE Firmy SET id_riaditel_firmy = @id_riaditel_firmy WHERE id_firmy = @id_firmy", _connection);
+                        command.Parameters.AddWithValue("@id_riaditel_firmy", SqlDbType.Int).Value = id_riaditel_firmy;
+                        command.Parameters.AddWithValue("@id_firmy", SqlDbType.Int).Value = id;
+                        command.ExecuteNonQuery();
+                        _connection.Close();
+
+                    }
+                    else { 
+                        return BadRequest("Neexistuje zamestnanec ktoreho chcete priradit ako riaditela firmy.");
+                    } 
+                   
                 }
 
                 if (nazov_firmy != null)
@@ -167,6 +175,7 @@ namespace OrgStructAPI.Controllers
             }
             return list;
         }
+        
     }
 
 }
