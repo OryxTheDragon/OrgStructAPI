@@ -82,6 +82,7 @@ namespace OrgStructAPI.Controllers
         public ObjectResult Post([FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] int? id_firmy_zamestnanca, [FromHeader] string? phone_num, [FromHeader] string? title, [FromHeader] int? id_oddelenia_zamestnanca)
         {//navrati BadResult alebo OKResult
 
+
             if (meno == null)
             {
                 return BadRequest("Novy zakaznik musi mat meno. Poslite nazov zakaznika v headeri.");
@@ -98,6 +99,12 @@ namespace OrgStructAPI.Controllers
             {
                 return BadRequest("Novy zamestnanec musi byt priradeny do firmy. V databaze neexistuje firma so sadanym ID.");
             }
+
+            string query = String.Format("INSERT INTO Zamestnanci(meno, priezvisko, id_firmy_zamestnanca, phone_num, title, id_oddelenia_zamestnanca) VALUES(" +
+                            "@meno," +
+                            "@priezvisko," +
+                            "@id_firmy_zamestnanca");
+
             if (phone_num != null)
             {
                 foreach (char c in phone_num)
@@ -112,6 +119,11 @@ namespace OrgStructAPI.Controllers
                     return BadRequest("Zadane telefonne cislo musi mat 10 cifier.");
 
                 }
+                query += ",@phone_num";
+            }
+            else
+            {
+                query += ",null";
             }
             if (title != null)
             {
@@ -119,6 +131,11 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Titul musi byt oznaceny dohromady maximalne 5 charaktermi.");
                 }
+                query += ",@title";
+            }
+            else
+            {
+                query += ",null";
             }
             if (id_oddelenia_zamestnanca != null)
             {
@@ -126,242 +143,71 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Oddelenie zadane cez id ako oddelenie v ktorom bude pracovat zamestnanec neexistuje.");
                 }
-            }
-            //TODO vytvaranie SQL query cez string.Format() namiesto statickeho vetvenia.
-            if (phone_num == null)
-            {
-                if (title == null)
-                {
-                    if (id_oddelenia_zamestnanca == null)
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "null," +
-                            "null," +
-                            "null" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                    else
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "null," +
-                            "null," +
-                            "@id_oddelenia_zamestnanca" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                }
-                else
-                {
-                    if (id_oddelenia_zamestnanca == null)
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "null," +
-                            "@title," +
-                            "null" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                    else
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "null," +
-                            "@title," +
-                            "@id_oddelenia_zamestnanca" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                        command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                }
+
+                query += ",@id_oddelenia_zamestnanca)";
             }
             else
             {
-                //TODO string.Format spravi SQL command pred poslanim var commandu!
-                if (title == null)
-                {
-                    if (id_oddelenia_zamestnanca == null)
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "@phone_num," +
-                            "null," +
-                            "null" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                    else
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "@phone_num," +
-                            "null," +
-                            "@id_oddelenia_zamestnanca" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                        command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                }
-                else
-                {
-                    if (id_oddelenia_zamestnanca == null)
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "@phone_num," +
-                            "@title," +
-                            "null" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                        command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                    else
-                    {
-                        _connection.ConnectionString = _connectionString;
-                        _connection.Open();
-                        var command = new SqlCommand("INSERT INTO Zamestnanci (meno,priezvisko,id_firmy_zamestnanca,phone_num,title,id_oddelenia_zamestnanca) VALUES(" +
-                            "@meno," +
-                            "@priezvisko," +
-                            "@id_firmy_zamestnanca," +
-                            "@phone_num," +
-                            "@title," +
-                            "@id_oddelenia_zamestnanca" +
-                            ")", _connection);
-                        command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                        command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                        command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
-                        command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                        command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                        command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
-                        command.ExecuteNonQuery();
-                        _connection.Close();
-                        return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
-                    }
-                }
+                query += ",null)";
             }
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
+            command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
+            command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
+            if (phone_num != null)
+            {
+                command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
+            }
+            if (title != null)
+            {
+                command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
+            }
+            if (id_oddelenia_zamestnanca != null)
+            {
+                command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
+            }
+            command.ExecuteNonQuery();
+            _connection.Close();
+            return Ok("Zamestnanec bol uspesne zavedeny do databazy.");
         }
 
         // PUT api/<ZamestnanciController>/5
         [HttpPut("{id}")]
         public ObjectResult Put(int id, [FromHeader] string? meno, [FromHeader] string? priezvisko, [FromHeader] string? phone_num, [FromHeader] string? title, [FromHeader] int? id_firmy_zamestnanca, [FromHeader] int? id_oddelenia_zamestnanca)
         {//navrati BadResult alebo OKResult
-
+            if (meno == null && priezvisko == null && id_firmy_zamestnanca == null && phone_num == null && title == null && id_oddelenia_zamestnanca == null)
+            {
+                return BadRequest("Neboli zaslane ziadne udaje na upravu. Poslite udaje na zmenu cez header.");
+            }
             if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, id))
             {
                 return BadRequest("Neexistuje zamestnanec so zadanym ID!");
             }
+            //Zaciatok tvorby SQL query
+            string query = String.Format("UPDATE Zamestnanci SET ");
+
             if (meno != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET meno = @meno WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "meno = @meno,";
             }
             if (priezvisko != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET priezvisko = @priezvisko WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "priezvisko = @priezvisko,";
             }
             if (id_firmy_zamestnanca != null)
             {
                 if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Firmy, (int)id_firmy_zamestnanca))
                 {
                     return BadRequest("Firma do zaslana cez ide do ktorej ma byt zamestnanec registrovany neexistuje.");
-
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET id_firmy_zamestnanca = @id_firmy_zamestnanca WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.VarChar).Value = id_firmy_zamestnanca;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "id_firmy_zamestnanca = @id_firmy_zamestnanca ,";
             }
             if (phone_num != null)
             {
                 foreach (char c in phone_num)
                 {
-                    Console.WriteLine(c);
                     if (c < '0' || c > '9')
                     {
                         return BadRequest("Zadane telefonne cislo moze obsahovat len cisla, nie pismena.");
@@ -370,15 +216,8 @@ namespace OrgStructAPI.Controllers
                 if (phone_num.Length != 10)
                 {
                     return BadRequest("Zadane telefonne cislo musi mat 10 cifier.");
-
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET phone_num = @phone_num WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "phone_num = @phone_num,";
             }
             if (title != null)
             {
@@ -386,13 +225,7 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Titul musi byt oznaceny dohromady maximalne 5 charaktermi.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET title = @title WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "title = @title,";
             }
             if (id_oddelenia_zamestnanca != null)
             {
@@ -400,27 +233,51 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Oddelenie zadane cez id ako oddelenie v ktorom bude pracovat zamestnanec neexistuje.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Zamestnanci SET id_oddelenia_zamestnanca = @id_oddelenia_zamestnanca WHERE id_zamestnanca = @id_zamestnanca", _connection);
-                command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
-                command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "id_oddelenia_zamestnanca = @id_oddelenia_zamestnanca ";
             }
-            if (meno == null && priezvisko == null && id_firmy_zamestnanca == null && phone_num == null && title == null && id_oddelenia_zamestnanca == null)
+            else {
+                query = query.Remove(query.Length - 1);
+            }
+            query += " WHERE id_zamestnanca = @id_zamestnanca";
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            if (meno != null)
             {
-                return BadRequest("Neboli zaslane ziadne udaje na upravu. Poslite udaje na zmenu cez header.");
+                command.Parameters.AddWithValue("@meno", SqlDbType.VarChar).Value = meno;
             }
+            if (priezvisko != null)
+            {
+                command.Parameters.AddWithValue("@priezvisko", SqlDbType.VarChar).Value = priezvisko;
+            }
+            if (id_firmy_zamestnanca != null)
+            {
+                command.Parameters.AddWithValue("@id_firmy_zamestnanca", SqlDbType.Int).Value = id_firmy_zamestnanca;
+            }
+            if (phone_num != null)
+            {
+                command.Parameters.AddWithValue("@phone_num", SqlDbType.VarChar).Value = phone_num;
+            }
+            if (title != null)
+            {
+                command.Parameters.AddWithValue("@title", SqlDbType.VarChar).Value = title;
+            }
+            if (id_oddelenia_zamestnanca != null)
+            {
+                command.Parameters.AddWithValue("@id_oddelenia_zamestnanca", SqlDbType.Int).Value = id_oddelenia_zamestnanca;
+            }
+            command.Parameters.AddWithValue("@id_zamestnanca", SqlDbType.Int).Value = id;
+            Console.WriteLine(query);
+            command.ExecuteNonQuery();
+            _connection.Close();
             return Ok("Zamestnanec bol uspesne upraveny.");
-
         }
 
         // DELETE api/<ZamestnanciController>/5
         [HttpDelete("{id}")]
         public ObjectResult Delete(int id)
         {
-            if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci,id))
+            if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, id))
             {
                 return BadRequest("Neexistuje zamestnanec so zadanym ID!");
             }

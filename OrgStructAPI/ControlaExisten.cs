@@ -20,7 +20,6 @@ namespace OrgStructAPI
             _connection.ConnectionString = _connectionString;
             _connection.Open();
             SqlCommand? command;
-            Console.WriteLine("Pred switchom.");
             switch (tableId)
             {
                 case TableID.Firmy:
@@ -56,7 +55,7 @@ namespace OrgStructAPI
             List<Object?> list = new List<Object?>();
             if (reader.HasRows == false)
             {
-                Console.WriteLine("Reader has no rows.");
+                Console.WriteLine("DBNULL replace reader has no rows.");
                 return list;
             }
             for (int i = 0; i < reader.FieldCount; i++)

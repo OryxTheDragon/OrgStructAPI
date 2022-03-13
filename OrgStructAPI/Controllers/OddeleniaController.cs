@@ -28,7 +28,7 @@ namespace OrgStructAPI.Controllers
                 Oddelenie item = new Oddelenie(
                        (int)newList[0],
                        (string)newList[1],
-                       (int)newList[2],
+                       (int?)newList[2],
                        (int)newList[3]);
                 _oddelenia.Add(item);
             }
@@ -53,14 +53,14 @@ namespace OrgStructAPI.Controllers
             {
                 return Conflict("Naslo sa ID, ale databaza nenavratila hodnoty, asi bude chyba v SQL query.");
             }
-                var newList = ControlaExisten.replaceDBNullsInReaderRow(reader);
-                Oddelenie item = new Oddelenie(
-                       (int)newList[0],
-                       (string)newList[1],
-                       (int)newList[2],
-                       (int)newList[3]);
-                return (item);
-            }
+            var newList = ControlaExisten.replaceDBNullsInReaderRow(reader);
+            Oddelenie item = new Oddelenie(
+                   (int)newList[0],
+                   (string)newList[1],
+                   (int?)newList[2],
+                   (int)newList[3]);
+            return (item);
+        }
 
         // POST api/<OddeleniaControllers>
         [HttpPost]
@@ -74,11 +74,12 @@ namespace OrgStructAPI.Controllers
             {
                 return BadRequest("Na zaregistrovanie noveho oddelenia je potreba uviest id projektu daneho oddelenia. Poslite nazov v headeri.");
             }
-            if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Oddelenia, (int)id_projektu_oddelenia))
+            if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Projekty, (int)id_projektu_oddelenia))
             {
                 return BadRequest("Projekt zaslany cez id ako projekt oddelenia neexistuje.");
             }
-
+            string query = ("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia, id_projektu_oddelenia) VALUES(" +
+                            "@nazov_oddelenia");
 
             if (id_veduceho_oddelenia != null)
             {
@@ -86,28 +87,29 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Zamestnanec zaslany s id ako veduci oddelenia neexistuje.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,@id_veduceho_oddelenia,@id_projektu_oddelenia)", _connection);
-                command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
-                command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.Int).Value = id_veduceho_oddelenia;
-                command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
-                command.ExecuteNonQuery();
-                _connection.Close();
-                return Ok("Nove oddelenie uspesne zaregistrovane.");
+                query += ",@id_veduceho_oddelenia ";
             }
-            else
-            {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("INSERT INTO Oddelenia (nazov_oddelenia,id_veduceho_oddelenia,id_projektu_oddelenia) VALUES(@nazov_oddelenia,null,@id_projektu_oddelenia)", _connection);
-                command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
-                command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
-                command.ExecuteNonQuery();
-                _connection.Close();
-                return Ok("Nove oddelenie uspesne zaregistrovane.");
 
+            if (id_veduceho_oddelenia == null)
+            {
+                query += ",null ";
             }
+
+            query += ",@id_projektu_oddelenia)";
+
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
+            if (id_veduceho_oddelenia != null)
+            {
+                command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.Int).Value = id_veduceho_oddelenia;
+            }
+            command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
+            command.ExecuteNonQuery();
+            _connection.Close();
+
+            return Ok("Nove oddelenie uspesne zaregistrovane.");
         }
 
         // PUT api/<OddeleniaControllers>/5
@@ -118,15 +120,17 @@ namespace OrgStructAPI.Controllers
             {
                 return BadRequest("Neexistuje oddelenie s danym ID!");
             }
+
+            if (id_projektu_oddelenia == null && id_veduceho_oddelenia == null && nazov_oddelenia == null)
+            {
+                return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
+            }
+
+            string query = String.Format("UPDATE Oddelenia SET ");
+
             if (nazov_oddelenia != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Oddelenia SET nazov_oddelenia = @nazov_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
-                command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
-                command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += " nazov_oddelenia = @nazov_oddelenia,";
             }
             if (id_veduceho_oddelenia != null)
             {
@@ -134,14 +138,7 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Neexistuje zamestnanec ktory ma byt priradeny ako veduci oddelenia.");
                 }
-
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Oddelenia SET id_veduceho_oddelenia = @id_veduceho_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
-                command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.VarChar).Value = id_veduceho_oddelenia;
-                command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += " id_veduceho_oddelenia = @id_veduceho_oddelenia,";
             }
 
             if (id_projektu_oddelenia != null)
@@ -150,19 +147,31 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Projekt zaslany cez id ako projekt oddelenia neexistuje.");
                 }
-
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Oddelenia SET id_projektu_oddelenia = @id_projektu_oddelenia WHERE id_oddelenia = @id_oddelenia", _connection);
-                command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.VarChar).Value = id_projektu_oddelenia;
-                command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += " id_projektu_oddelenia = @id_projektu_oddelenia ";
             }
-            if (id_projektu_oddelenia == null && id_veduceho_oddelenia == null && nazov_oddelenia == null)
+            if (id_projektu_oddelenia == null)
             {
-                return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
+                query = query.Remove(query.Length - 1);
             }
+            query += " WHERE id_oddelenia = @id_oddelenia";
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
+            if (nazov_oddelenia != null)
+            {
+                command.Parameters.AddWithValue("@nazov_oddelenia", SqlDbType.VarChar).Value = nazov_oddelenia;
+            }
+            if (id_veduceho_oddelenia != null)
+            {
+                command.Parameters.AddWithValue("@id_veduceho_oddelenia", SqlDbType.Int).Value = id_veduceho_oddelenia;
+            }
+            if (id_projektu_oddelenia != null)
+            {
+                command.Parameters.AddWithValue("@id_projektu_oddelenia", SqlDbType.Int).Value = id_projektu_oddelenia;
+            }
+            command.ExecuteNonQuery();
+            _connection.Close();
             return Ok("Oddelenie s danym ID bolo upravene.");
         }
 
@@ -181,7 +190,7 @@ namespace OrgStructAPI.Controllers
             command.Parameters.AddWithValue("@id_oddelenia", SqlDbType.Int).Value = id;
             command.ExecuteNonQuery();
             _connection.Close();
-            return Ok("Oddelenia s danym ID bolo zmazane.");
+            return Ok("Oddelenie s danym ID bolo zmazane.");
         }
     }
 }

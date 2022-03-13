@@ -32,7 +32,7 @@ namespace OrgStructAPI.Controllers
                 Firma item = new Firma(
                         (int)newList[0],
                         (string)newList[1],
-                        (int)newList[2]);
+                        (int?)newList[2]);
                 _firmy.Add(item);
             }
             _connection.Close();
@@ -62,23 +62,40 @@ namespace OrgStructAPI.Controllers
             Firma item = new Firma(
                     (int)newList[0],
                     (string)newList[1],
-                    (int)newList[2]);
+                    (int?)newList[2]);
             return item;
         }
 
         // POST api/<FirmyController>
         [HttpPost]
-        public ObjectResult Post([FromHeader] string? nazov_firmy)
+        public ObjectResult Post([FromHeader] string? nazov_firmy, [FromHeader] int? id_riaditel_firmy)
         {
             if (nazov_firmy == null)
             {
                 return BadRequest("Firma nema nazov. Na registraciu firmy potrebujete nazov firmy. Poslite nazov v headeri.");
             }
+            string query = "INSERT INTO Firmy (nazov_firmy,id_riaditel_firmy) VALUES(@nazov_firmy";
+
+            if (id_riaditel_firmy != null)
+            {
+                if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, (int)id_riaditel_firmy))
+                {
+                    return BadRequest("Nenasiel sa zamestnanec zaslany ako riaditel novej firmy.");
+                }
+                query += ",@id_riaditel_firmy)";
+            }
+            if (id_riaditel_firmy == null)
+            {
+                query += ",null)";
+            }
             _connection.ConnectionString = _connectionString;
             _connection.Open();
-            var command = new SqlCommand("INSERT INTO Firmy (nazov_firmy,id_riaditel_firmy) VALUES(@nazov_firmy,null)", _connection);
+            var command = new SqlCommand(query, _connection);
             command.Parameters.AddWithValue("@nazov_firmy", SqlDbType.VarChar).Value = nazov_firmy;
-            command.CommandType = CommandType.Text;
+            if (id_riaditel_firmy != null)
+            {
+                command.Parameters.AddWithValue("@id_riaditel_firmy", SqlDbType.Int).Value = id_riaditel_firmy;
+            }
             command.ExecuteNonQuery();
             _connection.Close();
             return Ok("Registracia firmy prebehla uspesne.");
@@ -93,35 +110,41 @@ namespace OrgStructAPI.Controllers
                 return BadRequest("Neexistuje firma s danym ID!");
             }
 
-            if (id_riaditel_firmy != null)
-            {
-                if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Firmy, (int)id_riaditel_firmy))
-                {
-                    return BadRequest("Neexistuje zamestnanec ktoreho chcete priradit ako riaditela firmy.");
-                }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Firmy SET id_riaditel_firmy = @id_riaditel_firmy WHERE id_firmy = @id_firmy", _connection);
-                command.Parameters.AddWithValue("@id_riaditel_firmy", SqlDbType.Int).Value = id_riaditel_firmy;
-                command.Parameters.AddWithValue("@id_firmy", SqlDbType.Int).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
-            }
+            string query = String.Format("UPDATE Firmy SET ");
 
             if (nazov_firmy != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Firmy SET nazov_firmy = @nazov_firmy WHERE id_firmy = @id_firmy", _connection);
-                command.Parameters.AddWithValue("@nazov_firmy", SqlDbType.VarChar).Value = nazov_firmy;
-                command.Parameters.AddWithValue("@id_firmy", SqlDbType.VarChar).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += " nazov_firmy = @nazov_firmy,";
             }
-            if (id_riaditel_firmy == null && nazov_firmy == null)
+
+            if (id_riaditel_firmy != null)
             {
-                return BadRequest("Neprisli ziadne udaje na upravu, zaslite udaje podla ktorych chcete upravovat v headeri.");
+                if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, (int)id_riaditel_firmy))
+                {
+                    return BadRequest("Neexistuje zamestnanec ktoreho chcete priradit ako riaditela firmy.");
+                }
+                query += " id_riaditel_firmy = @id_riaditel_firmy";
             }
+            if (id_riaditel_firmy == null)
+            {
+                query = query.Remove(query.Length - 1);
+            }
+            query += " WHERE id_firmy = @id_firmy";
+
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@id_firmy", SqlDbType.Int).Value = id;
+            if (nazov_firmy != null)
+            {
+                command.Parameters.AddWithValue("@nazov_firmy", SqlDbType.VarChar).Value = nazov_firmy;
+            }
+            if (id_riaditel_firmy != null)
+            {
+                command.Parameters.AddWithValue("@id_riaditel_firmy", SqlDbType.Int).Value = id_riaditel_firmy;
+            }
+            command.ExecuteNonQuery();
+            _connection.Close();
             return Ok("Firma s danym ID bola upravena.");
         }
 

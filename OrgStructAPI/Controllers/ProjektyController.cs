@@ -68,123 +68,84 @@ namespace OrgStructAPI.Controllers
         [HttpPost]
         public ObjectResult Post([FromHeader] string nazov_projektu, [FromHeader] string? popis_projektu, [FromHeader] int? id_veduci_projektu, [FromHeader] int id_divizia_projektu)
         {
-            SqlCommand command;
             if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Divizie, id_divizia_projektu))
             {
                 return BadRequest("Projekt musi byt priradeny do divizie. V databaze neexistuje divizia so zadanym ID.");
             }
-            if (popis_projektu == null)
+            if (nazov_projektu == null)
             {
-                if (id_veduci_projektu == null)
-                {
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    command = new SqlCommand("INSERT INTO Projekty (nazov_projektu,popis_projektu,id_veduci_projektu,id_divizia_projektu) VALUES(" +
-                        "@nazov_projektu," +
-                        "null," +
-                        "null," +
-                        "@id_divizia_projektu" +
-                        ")", _connection);
-                    command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
-                    command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.Int).Value = id_divizia_projektu;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
-                    return Ok("Projekt bol uspesne zavedeny do databazy bez popisu a bez veduceho zamestnanca.");
-                }
-                else
-                {
-                    if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, (int)id_veduci_projektu))
-                    {
-                        return BadRequest("Zamestnanec so zadanym ID ako veduci projektu neexistuje.");
-                    }
-                    _connection.ConnectionString = _connectionString;
-                    _connection.Open();
-                    command = new SqlCommand("INSERT INTO Projekty (nazov_projektu,popis_projektu,id_veduci_projektu,id_divizia_projektu) VALUES(" +
-                        "@nazov_projektu," +
-                        "null," +
-                        "@id_veduci_projektu," +
-                        "@id_divizia_projektu" +
-                        ")", _connection);
-                    command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
-                    command.Parameters.AddWithValue("@id_veduci_projektu", SqlDbType.Int).Value = id_veduci_projektu;
-                    command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.Int).Value = id_divizia_projektu;
-                    command.ExecuteNonQuery();
-                    _connection.Close();
-                    return Ok("Projekt bol uspesne zavedeny do databazy bez popisu.");
-                }
-
+                return BadRequest("Na vytvorenie projektu musite zadat meno noveho projektu.");
             }
-            else if (id_veduci_projektu == null)
+
+            string query = String.Format("INSERT INTO Projekty(nazov_projektu, id_divizia_projektu, popis_projektu, id_veduci_projektu) VALUES(" +
+                            "@nazov_projektu," +
+                            "@id_divizia_projektu,");
+
+            if (popis_projektu != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                command = new SqlCommand("INSERT INTO Projekty (nazov_projektu,popis_projektu,id_veduci_projektu,id_divizia_projektu) VALUES(" +
-                    "@nazov_projektu," +
-                    "@popis_projektu," +
-                    "null," +
-                    "@id_divizia_projektu" +
-                    ")", _connection);
-                command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
-                command.Parameters.AddWithValue("@popis_projektu", SqlDbType.VarChar).Value = popis_projektu;
-                command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.Int).Value = id_divizia_projektu;
-                command.ExecuteNonQuery();
-                _connection.Close();
-                return Ok("Projekt bol uspesne zavedeny do databazy bez hodnoty veduceho zamestnanca.");
+                query += "@popis_projektu,";
             }
             else
+            {
+                query += "null,";
+            }
+            if (id_veduci_projektu != null)
             {
                 if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Zamestnanci, (int)id_veduci_projektu))
                 {
                     return BadRequest("Zamestnanec so zadanym ID ako veduci projektu neexistuje.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                command = new SqlCommand("INSERT INTO Projekty (nazov_projektu,popis_projektu,id_veduci_projektu,id_divizia_projektu) VALUES(" +
-                    "@nazov_projektu," +
-                    "@popis_projektu," +
-                    "@id_veduci_projektu," +
-                    "@id_divizia_projektu" +
-                    ")", _connection);
-                command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
-                command.Parameters.AddWithValue("@popis_projektu", SqlDbType.VarChar).Value = popis_projektu;
-                command.Parameters.AddWithValue("@id_veduci_projektu", SqlDbType.Int).Value = id_veduci_projektu;
-                command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.Int).Value = id_divizia_projektu;
-                command.ExecuteNonQuery();
-                _connection.Close();
-                return Ok("Projekt bol plne uspesne zavedeny do databazy.");
+                query += "@id_veduci_projektu)";
             }
-
+            else
+            {
+                query += "null)";
+            }
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            SqlCommand command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
+            command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.Int).Value = id_divizia_projektu;
+            if (popis_projektu != null)
+            {
+                command.Parameters.AddWithValue("@popis_projektu", SqlDbType.VarChar).Value = popis_projektu;
+            }
+            if (id_veduci_projektu != null)
+            {
+                command.Parameters.AddWithValue("@id_veduci_projektu", SqlDbType.Int).Value = id_veduci_projektu;
+            }
+            command.ExecuteNonQuery();
+            return Ok("Projekt bol plne uspesne zavedeny do databazy.");
         }
 
         // PUT api/<ProjektyControllers>/5
         [HttpPut("{id}")]
         public ObjectResult Put(int id, [FromHeader] string? nazov_projektu, [FromHeader] string? popis_projektu, [FromHeader] int? id_veduci_projektu, [FromHeader] int? id_divizia_projektu)
         {
+            //Praca so stringami. Davat pozor pri zmene.
+            if (nazov_projektu == null && popis_projektu == null && id_veduci_projektu == null && nazov_projektu == null && id_divizia_projektu == null)
+            {
+                return BadRequest("Neprisli ziadne zadane hodnoty na upravu. Zaslite hodnoty ktore chcete upravit cez header.");
+            }
+
             if (!ControlaExisten.ExistujePodlaID(ControlaExisten.TableID.Projekty, id))
             {
                 return BadRequest("Neexistuje projekt s danym ID!");
             }
 
+            string query = String.Format("UPDATE Projekty SET ");
+
             if (nazov_projektu != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Projekty SET nazov_projektu = @nazov_projektu WHERE id_projektu = @id_projektu", _connection);
-                command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
-                command.Parameters.AddWithValue("@id_projektu", SqlDbType.VarChar).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "nazov_projektu = @nazov_projektu, ";
+
             }
 
             if (popis_projektu != null)
             {
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Projekty SET popis_projektu = @popis_projektu WHERE id_projektu = @id_projektu", _connection);
-                command.Parameters.AddWithValue("@popis_projektu", SqlDbType.VarChar).Value = popis_projektu;
-                command.Parameters.AddWithValue("@id_projektu", SqlDbType.VarChar).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+
+                query += "popis_projektu = @popis_projektu, ";
+
             }
 
             if (id_veduci_projektu != null)
@@ -193,13 +154,8 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Neexistuje zamestnanec ktory ma byt priradeny ako veduci projektu.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Projekty SET id_veduci_projektu = @id_veduci_projektu WHERE id_projektu = @id_projektu", _connection);
-                command.Parameters.AddWithValue("@id_veduci_projektu", SqlDbType.VarChar).Value = id_veduci_projektu;
-                command.Parameters.AddWithValue("@id_projektu", SqlDbType.VarChar).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "id_veduci_projektu = @id_veduci_projektu,";
+
             }
 
             if (id_divizia_projektu != null)
@@ -208,18 +164,35 @@ namespace OrgStructAPI.Controllers
                 {
                     return BadRequest("Neexistuje divizia ktora ma byt priradena ako nova divizia projektu.");
                 }
-                _connection.ConnectionString = _connectionString;
-                _connection.Open();
-                var command = new SqlCommand("UPDATE Projekty SET id_divizia_projektu = @id_divizia_projektu WHERE id_projektu = @id_projektu", _connection);
-                command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.VarChar).Value = id_divizia_projektu;
-                command.Parameters.AddWithValue("@id_projektu", SqlDbType.VarChar).Value = id;
-                command.ExecuteNonQuery();
-                _connection.Close();
+                query += "id_divizia_projektu = @id_divizia_projektu ";
             }
-            if (nazov_projektu == null && popis_projektu == null && id_veduci_projektu == null && nazov_projektu == null && id_divizia_projektu == null)
+            else {
+                query = query.Remove(query.Length - 1);
+            }
+            query += " WHERE id_projektu = @id_projektu";
+
+            _connection.ConnectionString = _connectionString;
+            _connection.Open();
+            var command = new SqlCommand(query, _connection);
+            command.Parameters.AddWithValue("@id_projektu", SqlDbType.VarChar).Value = id;
+            if (nazov_projektu != null)
             {
-                return BadRequest("Neprisli ziadne zadane hodnoty na upravu. Zaslite hodnoty ktore chcete upravit cez header.");
+                command.Parameters.AddWithValue("@nazov_projektu", SqlDbType.VarChar).Value = nazov_projektu;
             }
+            if (popis_projektu != null)
+            {
+                command.Parameters.AddWithValue("@popis_projektu", SqlDbType.VarChar).Value = popis_projektu;
+            }
+            if (id_veduci_projektu != null)
+            {
+                command.Parameters.AddWithValue("@id_veduci_projektu", SqlDbType.VarChar).Value = id_veduci_projektu;
+            }
+            if (id_divizia_projektu != null)
+            {
+                command.Parameters.AddWithValue("@id_divizia_projektu", SqlDbType.VarChar).Value = id_divizia_projektu;
+            }
+            command.ExecuteNonQuery();
+            _connection.Close();
             return Ok("Projekt s danym ID bol upraveny.");
         }
 
